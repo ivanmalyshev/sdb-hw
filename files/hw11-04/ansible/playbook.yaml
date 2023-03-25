@@ -1,0 +1,80 @@
+---
+- name: install RabbiMQ cluster
+  hosts: all
+  become: yes
+  tasks: 
+   - name: copy script on nodes
+     become: true
+     copy:
+       src: ./install_rmq.sh
+       dest: /home/mid
+       owner: mid
+       group: mid
+       mode: 0644
+   - name: copy hosts file
+     become: true
+     copy:
+       src: ./hosts
+       dest: /home/mid
+       owner: mid
+       group: mid
+       mode: 0644  
+   - name: run sh script
+     ansible.builtin.command: bash /home/mid/install_rmq.sh
+   - name: install curl
+     ansible.builtin.apt:
+       name: curl
+       state: present     
+   - name: get status page
+     ansible.builtin.shell:
+       cmd: curl -Is localhost:15672
+     register: cmd
+   - debug: msg="{{ cmd }}" 
+   - name: get hosts file
+     ansible.builtin.shell:
+       cmd: cat /etc/hosts
+     register: cmd
+   - debug: msg="{{ cmd }}" 
+ 
+- name: configure cluster
+  hosts: cluster_main
+  become: yes
+  tasks: 
+   - name: copy .erlang file from master on nodes
+     become: true
+     ansible.builtin.fetch:
+       src: /var/lib/rabbitmq/.erlang.cookie
+       dest: ./
+       owner: root
+       group: root
+       mode: 0400
+- name: upload cookie files
+  hosts: cluster_nodes
+  become: yes
+  tasks:
+   - name: upload erlang.cookie
+     become: true
+     copy:
+       src: ./master/var/lib/rabbitmq/.erlang.cookie
+       dest: /var/lib/rabbitmq/
+       owner: rabbitmq
+       group: rabbitmq
+       mode: 0400
+   - name: stop_app
+     become: true
+     become_user: root
+     ansible.builtin.shell: rabbitmqctl stop_app
+   - name: join_cluster
+     become: true
+     become_user: root
+     ansible.builtin.shell: rabbitmqctl join_cluster master
+   - name: start_app
+     become: true
+     become_user: root
+     ansible.builtin.shell: rabbitmqctl start_app
+   - name: cluster_status
+     become: true
+     become_user: root
+     ansible.builtin.shell: rabbitmqctl cluster_status
+    
+   

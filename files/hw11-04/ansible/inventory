@@ -1,0 +1,18 @@
+[cluster_main]
+master ansible_ssh_host=192.168.88.221
+
+[cluster_nodes]
+node1 ansible_ssh_host=192.168.88.222 
+node2 ansible_ssh_host=192.168.88.220
+
+
+[cluster_main:vars]
+ansible_connection=ssh
+ansible_user=mid
+ansible_ssh_pass=midx11011
+ 
+[cluster_nodes:vars]
+ansible_connection=ssh
+ansible_user=mid
+ansible_ssh_pass=midx11011
+

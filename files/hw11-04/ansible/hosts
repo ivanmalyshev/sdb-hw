@@ -1,0 +1,4 @@
+127.0.0.1       localhost.localdomain   localhost
+192.168.88.221  master  master
+192.168.88.222  node1   node1
+192.168.88.220  node2   node2
